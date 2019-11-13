@@ -1,0 +1,106 @@
+
+#include <LiquidCrystal.h>
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(8, 9, 4, 5, 6, 7);  
+char string[16];// string to be changed
+char stringNormal[16];//string to be keeped
+int p[]={16,16,16};//position of the spaces is the string
+int i=0,n=0,m=0,c=0,dificultlevel=6,c1=0;//i,n and m are counters and c is the number of characters in the serial buffer
+char aux;//variable used to keep values while changing places in the array string[]
+
+int buttonState = 0,brk=0; // state of the button and variable to prevent that the string be written in the LCD many times.
+int activeryeasymode=1;// 1-the fist and the last letters aren't changed,0-the first and the last letters can be changed
+
+void setup(){
+  // set up the LCD's number of columns and rows: 
+  lcd.begin(16, 2);
+  // initialize the serial communications:
+  Serial.begin(9600);
+
+}
+
+void loop(){
+  int buttonPin;
+  buttonPin = analogRead (0);
+  randomSeed(analogRead(0));
+  // when characters arrive over the serial port...
+  if (Serial.available()) {
+    // wait a bit for the entire message to arrive
+    delay(100);
+    // clear the screen
+    lcd.clear();
+    // read all the available characters
+    while (Serial.available() > 0) {
+      string[i]=(Serial.read()); //store the characterers in the string
+      stringNormal[i]=string[i];//copy them in the string that will be keeped
+      if(string[i]==' '){
+        p[c1]=i;//If there are spaces in the string, store their position
+        c1++;
+      }
+      i++;c++;
+    }
+    i=0;
+    while(i<dificultlevel){//The dificult level is the number of changes in the string
+      n= random(0,c);// take a random index of the string to change the letter
+      m=findm(n); //on the final of the code
+      if((activeryeasymode==1)&&(c>3)){
+        if((n!=0)&&(n!=(c-1))&&(m!=0)&&(m!=(c-1))){ // In the veryeasy mode the first and the last letter are kepped in their original position 
+            if((string[n]!=' ')&&(string[m]!=' ')&&(string[n]!='\0')&&(string[m]!='\0')){  //don't changed the characters if they are spaces or the null character
+            aux=string[n];//change the position of letters
+            string[n]=string[m];
+            string[m]=aux;  
+            i++;  
+            }
+         }
+      }else{
+          if((string[n]!=' ')&&(string[m]!=' ')&&(string[n]!='\0')&&(string[m]!='\0')){  
+          aux=string[n];
+          string[n]=string[m];
+          string[m]=aux;  
+          i++;  
+         }
+      }             
+  }
+  lcd.clear();// clear the lcd
+  delay(50);// a delay to sure that the lcd will not lose information
+  lcd.print(string);//prinnt the changed string in the LCD
+  brk=0;// let the button ready to be pressed
+  }
+ 
+  buttonState = digitalRead(buttonPin);
+    if ((buttonPin < 100)| (buttonPin < 200) | (buttonPin < 400) | (buttonPin < 600) && (brk==0)) { //if the button is pressed, when brk is 0 the arduino is allowed write more than one time in the lcd
+      lcd.clear();//clear the lcd
+      delay(50);
+      lcd.print(stringNormal);//print the original string on the lcd.
+      brk=1;//  prevent the arduino from write in lcd the string more tha one time
+      for(int k=0;k<16;k++){
+          string[k]=' ';// clear the strings to prepare them to receive a new value 
+          stringNormal[k]=' ';
+      }
+    } 
+  i=0;n=0;m=0;c=0;c1=0;//clear all the counters
+}
+ 
+int findm(int num){// return a random number based in the first random number, is used to make the arduino change letters in the same word
+  int rand=0;
+  if(num<p[0]){
+    rand=random(0,p[0]);
+    return rand;
+  }
+  if((num>p[0])&&(num<p[1])){
+    rand=random(p[0],p[1]);
+    return rand;
+  }
+ 
+  if((num>p[1])&&(num<p[2])){
+    rand=random(p[1],p[2]);
+    return rand;
+  }
+}
+
+
+
+
+
+    
